@@ -1,0 +1,6 @@
+# Compilados de Eclipse
+bin/
+*.class
+
+# Basura de macOS
+.DS_Store
