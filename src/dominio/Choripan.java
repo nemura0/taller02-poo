@@ -41,5 +41,14 @@ public class Choripan extends Consumo {
 	public String getTipo() {
 		return "Choripan";
 	}
+	
+	@Override
+	public String getFila() {
+		return Formato.izquierda(getConsumidor(), 12)
+				+ Formato.derecha(largo + " cm", 7)
+				+ Formato.derecha(ancho + " cm", 8)
+				+ "   " + getFecha()
+				+ Formato.derecha(Formato.decimal(calcularKcal()), 9);
+	}
 
 }
