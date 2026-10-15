@@ -9,18 +9,15 @@ public class Terremoto extends Consumo {
 	
 	private double litros;
 	
-	// los datos comunes se los pasa a Consumo con super()
 	public Terremoto(String consumidor, double litros, String fecha) {
 		super(consumidor, fecha);
 		this.litros = litros;
 	}
 	
-	// litros del terremoto
 	public double getLitros() {
 		return litros;
 	}
 	
-	// cambia los litros (se usa al editar)
 	public void setLitros(double litros) {
 		this.litros = litros;
 	}
@@ -34,6 +31,14 @@ public class Terremoto extends Consumo {
 	@Override
 	public String getTipo() {
 		return "Terremoto";
+	}
+	
+	@Override
+	public String getFila() {
+		return Formato.izquierda(getConsumidor(), 12)
+				+ Formato.derecha(Formato.decimal(litros) + " L", 8)
+				+ "   " + getFecha()
+				+ Formato.derecha(Formato.decimal(calcularKcal()), 9);
 	}
 
 }

@@ -32,10 +32,17 @@ public abstract class Consumo {
 		this.fecha = fecha;
 	}
 	
+	public double getLitros() {
+		return 0;
+	}
+	
 	// kcal del consumo, cada tipo tuene su formula
 	public abstract double calcularKcal();
 	
 	// tipo del consumo tal como sale en el txt: "Choripan" o "Terremoto"
 	public abstract String getTipo();
-
+	
+	// fila para la tabla de "ver registros" cada tipo muestra sus propias columnas
+	public abstract String getFila();
+	
 }
