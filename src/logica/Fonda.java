@@ -176,5 +176,25 @@ public class Fonda {
 	public int getLineasDescartadas() {
 		return lineasDescartadas;
 	}
+	
+	// cuantos consumos hay de un tipo
+	public int contarPorTipo(String tipo) {
+		int cantidad = 0;
+		for (int i = 0; i < cantidadConsumos; i++) {
+			if (consumos[i].getTipo().equals(tipo)) {
+				cantidad++;
+			}
+		}
+		return cantidad;
+	}
+	
+	// suma los litros
+	public double sumarLitros() {
+		double total = 0;
+		for (int i = 0; i < cantidadConsumos; i++) {
+			total = total + consumos[i].getLitros();
+		}
+		return total;
+	}
 
 }
