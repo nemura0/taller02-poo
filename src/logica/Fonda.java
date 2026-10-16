@@ -12,6 +12,7 @@ import java.util.Scanner;
 
 import dominio.Choripan;
 import dominio.Consumo;
+import dominio.Formato;
 import dominio.Participante;
 import dominio.Terremoto;
 
@@ -266,6 +267,115 @@ public class Fonda {
 		cantidadConsumos--;
 		consumos[cantidadConsumos] = null;
 		return true;
+	}
+	
+	// cuantos consumos de un tipo tiene un usuario
+	public int contarPorUsuario(String consumidor, String tipo) {
+		int cantidad = 0;
+		for (int i = 0; i < cantidadConsumos; i++) {
+			if (consumos[i].getConsumidor().equals(consumidor) && consumos[i].getTipo().equals(tipo)) {
+				cantidad++;
+			}
+		}
+		return cantidad;
+	}
+	
+	// litros totales de un usuario (los choripanes aportan 0)
+	public double sumarLitrosPorUsuario(String consumidor) {
+		double total = 0;
+		for (int i = 0; i < cantidadConsumos; i++) {
+			if (consumos[i].getConsumidor().equals(consumidor)) {
+				total = total + consumos[i].getLitros();
+			}
+		}
+		return total;
+	}
+	
+	// kcal de un usuario para un tipo, cada consumo calcula las suyas (polimorfismo)
+	public double sumarKcalPorUsuario(String consumidor, String tipo) {
+		double total = 0;
+		for (int i = 0; i < cantidadConsumos; i++) {
+			if (consumos[i].getConsumidor().equals(consumidor) && consumos[i].getTipo().equals(tipo)) {
+				total = total + consumos[i].calcularKcal();
+			}
+		}
+		return total;
+	}
+	
+	// kcal de toda la fonda, sumando el total de cada usuario ya redondeado a 2 decimales
+	// asi el total coincide con la suma de lo que se ve en la tabla (como en el enunciado)
+	public double sumarKcalFonda() {
+		double total = 0;
+		for (int i = 0; i < cantidadParticipantes; i++) {
+			String nombre = participantes[i].getNombre();
+			double kcal = sumarKcalPorUsuario(nombre, "Choripan") + sumarKcalPorUsuario(nombre, "Terremoto");
+			int centesimas = (int) (kcal * 100 + 0.5);
+			total = total + centesimas / 100.0;
+		}
+		return total;
+	}
+	
+	// litros de terremoto que tomo un usuario en una fecha (suma todos los de ese dia)
+	public double litrosEnFecha(String consumidor, String fecha) {
+		double total = 0;
+		for (int i = 0; i < cantidadConsumos; i++) {
+			if (consumos[i].getConsumidor().equals(consumidor) && consumos[i].getFecha().equals(fecha)) {
+				total = total + consumos[i].getLitros();
+			}
+		}
+		return total;
+	}
+	
+	// true si en la posicion indicada esta el primer terremoto de ese usuario en esa fecha
+	// sirve para revisar cada fecha una sola vez aunque tenga varios terremotos
+	private boolean esPrimerTerremotoDelDia(int posicion) {
+		Consumo actual = consumos[posicion];
+		for (int i = 0; i < posicion; i++) {
+			if (consumos[i].getTipo().equals("Terremoto")
+					&& consumos[i].getConsumidor().equals(actual.getConsumidor())
+					&& consumos[i].getFecha().equals(actual.getFecha())) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	// true si la posicion indicada abre un dia ebrio: primer terremoto del dia y 2 L o mas ese dia
+	private boolean esDiaEbrio(int posicion, String consumidor) {
+		Consumo actual = consumos[posicion];
+		return actual.getTipo().equals("Terremoto")
+				&& actual.getConsumidor().equals(consumidor)
+				&& esPrimerTerremotoDelDia(posicion)
+				&& litrosEnFecha(consumidor, actual.getFecha()) >= 2;
+	}
+	
+	// cantidad de dias en que el usuario tomo 2 litros o mas de terremoto
+	public int contarDiasEbrio(String consumidor) {
+		int dias = 0;
+		for (int i = 0; i < cantidadConsumos; i++) {
+			if (esDiaEbrio(i, consumidor)) {
+				dias++;
+			}
+		}
+		return dias;
+	}
+	
+	// fechas de los dias ebrio con sus litros, ej: "2026-09-18 (2.25 L)", o "-" si no tiene
+	public String detalleDiasEbrio(String consumidor) {
+		String detalle = "";
+		for (int i = 0; i < cantidadConsumos; i++) {
+			if (esDiaEbrio(i, consumidor)) {
+				String fecha = consumos[i].getFecha();
+				if (detalle.length() != 0) {
+					detalle = detalle + ", ";
+				}
+				detalle = detalle + fecha + " (" + Formato.decimal(litrosEnFecha(consumidor, fecha)) + " L)";
+			}
+		}
+		if (detalle.length() == 0) {
+			return "-";
+		}
+		return detalle;
 	}
 
 }

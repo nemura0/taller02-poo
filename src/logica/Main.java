@@ -514,24 +514,68 @@ public class Main {
 	
 	// ================== METRICAS POR USUARIO ==================
 	
-	// pendiente (siguiente commit): cantidad de choripanes por usuario
+	// tabla con la cantidad de choripanes de cada usuario
 	public static void mostrarChoripanesPorUsuario(Fonda fonda) {
-		System.out.println("\n>> Opcion en construccion.");
+		System.out.println("\n======= CHORIPANES POR USUARIO =============");
+		System.out.println("  " + Formato.izquierda("Usuario", 12) + Formato.derecha("Cantidad", 10));
+		
+		for (int i = 0; i < fonda.getCantidadParticipantes(); i++) {
+			String nombre = fonda.getParticipante(i).getNombre();
+			System.out.println("  " + Formato.izquierda(nombre, 12)
+					+ Formato.derecha("" + fonda.contarPorUsuario(nombre, "Choripan"), 10));
+		}
+		System.out.println("============================================");
 	}
 	
-	// pendiente (siguiente commit): cantidad de terremotos y litros por usuario
+	// tabla con la cantidad de terremotos y los litros de cada usuario
 	public static void mostrarTerremotosPorUsuario(Fonda fonda) {
-		System.out.println("\n>> Opcion en construccion.");
+		System.out.println("\n======= TERREMOTOS POR USUARIO =============");
+		System.out.println("  " + Formato.izquierda("Usuario", 12) + Formato.derecha("Cantidad", 10)
+				+ Formato.derecha("Litros", 12));
+		
+		for (int i = 0; i < fonda.getCantidadParticipantes(); i++) {
+			String nombre = fonda.getParticipante(i).getNombre();
+			System.out.println("  " + Formato.izquierda(nombre, 12)
+					+ Formato.derecha("" + fonda.contarPorUsuario(nombre, "Terremoto"), 10)
+					+ Formato.derecha(Formato.decimal(fonda.sumarLitrosPorUsuario(nombre)) + " L", 12));
+		}
+		System.out.println("============================================");
 	}
 	
-	// pendiente (siguiente commit): kcal por usuario y total de la fonda
+	// tabla con las kcal de choripan, terremoto y total de cada usuario, mas el total de la fonda
 	public static void mostrarKcalPorUsuario(Fonda fonda) {
-		System.out.println("\n>> Opcion en construccion.");
+		System.out.println("\n============ KCAL POR USUARIO ==============");
+		System.out.println("  " + Formato.izquierda("Usuario", 12) + Formato.derecha("Choripan", 10)
+				+ Formato.derecha("Terremoto", 12) + Formato.derecha("Total", 10));
+		
+		for (int i = 0; i < fonda.getCantidadParticipantes(); i++) {
+			String nombre = fonda.getParticipante(i).getNombre();
+			double kcalChoripan = fonda.sumarKcalPorUsuario(nombre, "Choripan");
+			double kcalTerremoto = fonda.sumarKcalPorUsuario(nombre, "Terremoto");
+			System.out.println("  " + Formato.izquierda(nombre, 12)
+					+ Formato.derecha(Formato.decimal(kcalChoripan), 10)
+					+ Formato.derecha(Formato.decimal(kcalTerremoto), 12)
+					+ Formato.derecha(Formato.decimal(kcalChoripan + kcalTerremoto), 10));
+		}
+		System.out.println("--------------------------------------------");
+		System.out.println("  Consumo total de la fonda: " + Formato.decimal(fonda.sumarKcalFonda()) + " kcal");
+		System.out.println("============================================");
 	}
 	
-	// pendiente (siguiente commit): dias ebrio por usuario
+	// tabla con los dias ebrio de cada usuario (2 L o mas de terremoto en una misma fecha)
 	public static void mostrarDiasEbrio(Fonda fonda) {
-		System.out.println("\n>> Opcion en construccion.");
+		System.out.println("\n========= DIAS EBRIO POR USUARIO ===========");
+		System.out.println("  (se cuenta un dia ebrio con 2 L o mas en la misma fecha)\n");
+		System.out.println("  " + Formato.izquierda("Usuario", 12) + Formato.derecha("Dias ebrio", 12)
+				+ "   Detalle");
+		
+		for (int i = 0; i < fonda.getCantidadParticipantes(); i++) {
+			String nombre = fonda.getParticipante(i).getNombre();
+			System.out.println("  " + Formato.izquierda(nombre, 12)
+					+ Formato.derecha("" + fonda.contarDiasEbrio(nombre), 12)
+					+ "   " + fonda.detalleDiasEbrio(nombre));
+		}
+		System.out.println("============================================");
 	}
 
 }
