@@ -4,7 +4,9 @@
 
 package logica;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
 
@@ -26,7 +28,7 @@ public class Fonda {
 	
 	private int lineasDescartadas;
 	
-	// parte vacía con los vectores listos para 200
+	// parte vacia con los vectores listos para 200
 	public Fonda() {
 		participantes = new Participante[MAX_REGISTROS];
 		cantidadParticipantes = 0;
@@ -44,7 +46,7 @@ public class Fonda {
 			while (lector.hasNextLine()) {
 				String nombre = lector.nextLine();
 				
-				if (nombre.isEmpty() || existeParticipante(nombre)
+				if (nombre.length() == 0 || existeParticipante(nombre)
 						|| cantidadParticipantes >= MAX_REGISTROS) {
 					lineasDescartadas++;
 				} else {
@@ -177,7 +179,7 @@ public class Fonda {
 		return lineasDescartadas;
 	}
 	
-	// cuantos consumos hay de un tipo
+	// cuantos consumos hay de un tipo ("Choripan" o "Terremoto")
 	public int contarPorTipo(String tipo) {
 		int cantidad = 0;
 		for (int i = 0; i < cantidadConsumos; i++) {
@@ -188,13 +190,82 @@ public class Fonda {
 		return cantidad;
 	}
 	
-	// suma los litros
+	// suma los litros de todos los consumos (los choripanes aportan 0)
 	public double sumarLitros() {
 		double total = 0;
 		for (int i = 0; i < cantidadConsumos; i++) {
 			total = total + consumos[i].getLitros();
 		}
 		return total;
+	}
+	
+	// reescribe el txt completo con los consumos actuales, en el mismo formato original
+	// devuelve false si no se pudo escribir
+	public boolean guardarConsumos(String nombreArchivo) {
+		try {
+			BufferedWriter escritor = new BufferedWriter(new FileWriter(nombreArchivo));
+			
+			for (int i = 0; i < cantidadConsumos; i++) {
+				escritor.write(consumos[i].toLineaArchivo() + "\n");
+			}
+			
+			escritor.close();
+			return true;
+		} catch (IOException e) {
+			return false;
+		}
+	}
+	
+	// pasa del numero que ve el usuario (1, 2, 3... dentro de su tipo) a la posicion real del vector
+	// ej: el terremoto numero 3 puede estar en la posicion 17 del vector
+	// devuelve -1 si no existe ese numero para ese tipo
+	public int buscarIndice(String tipo, int numero) {
+		int contador = 0;
+		for (int i = 0; i < cantidadConsumos; i++) {
+			if (consumos[i].getTipo().equals(tipo)) {
+				contador++;
+				if (contador == numero) {
+					return i;
+				}
+			}
+		}
+		return -1;
+	}
+	
+	// agrega el consumo al final del vector
+	// devuelve false si ya se llego al tope de MAX_REGISTROS (no se agrega nada)
+	public boolean agregarConsumo(Consumo nuevo) {
+		if (nuevo == null || cantidadConsumos >= MAX_REGISTROS) {
+			return false;
+		}
+		consumos[cantidadConsumos] = nuevo;
+		cantidadConsumos++;
+		return true;
+	}
+	
+	// cambia el consumo de la posicion indice (posicion real, sacada con buscarIndice) por el nuevo
+	// se arma un Choripan/Terremoto nuevo con los datos editados, asi no hace falta castear
+	// devuelve false si el indice no existe
+	public boolean reemplazarConsumo(int indice, Consumo nuevo) {
+		if (nuevo == null || indice < 0 || indice >= cantidadConsumos) {
+			return false;
+		}
+		consumos[indice] = nuevo;
+		return true;
+	}
+	
+	// borra el consumo de la posicion indice corriendo los de la derecha una posicion
+	// devuelve false si el indice no existe
+	public boolean eliminarConsumo(int indice) {
+		if (indice < 0 || indice >= cantidadConsumos) {
+			return false;
+		}
+		for (int i = indice; i < cantidadConsumos - 1; i++) {
+			consumos[i] = consumos[i + 1];
+		}
+		cantidadConsumos--;
+		consumos[cantidadConsumos] = null;
+		return true;
 	}
 
 }
