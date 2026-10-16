@@ -4,12 +4,15 @@
 
 package logica;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
 
 import dominio.Choripan;
 import dominio.Consumo;
+import dominio.Formato;
 import dominio.Participante;
 import dominio.Terremoto;
 
@@ -26,7 +29,7 @@ public class Fonda {
 	
 	private int lineasDescartadas;
 	
-	// parte vacía con los vectores listos para 200
+	// parte vacia con los vectores listos para 200
 	public Fonda() {
 		participantes = new Participante[MAX_REGISTROS];
 		cantidadParticipantes = 0;
@@ -44,7 +47,7 @@ public class Fonda {
 			while (lector.hasNextLine()) {
 				String nombre = lector.nextLine();
 				
-				if (nombre.isEmpty() || existeParticipante(nombre)
+				if (nombre.length() == 0 || existeParticipante(nombre)
 						|| cantidadParticipantes >= MAX_REGISTROS) {
 					lineasDescartadas++;
 				} else {
@@ -177,7 +180,7 @@ public class Fonda {
 		return lineasDescartadas;
 	}
 	
-	// cuantos consumos hay de un tipo
+	// cuantos consumos hay de un tipo ("Choripan" o "Terremoto")
 	public int contarPorTipo(String tipo) {
 		int cantidad = 0;
 		for (int i = 0; i < cantidadConsumos; i++) {
@@ -188,13 +191,191 @@ public class Fonda {
 		return cantidad;
 	}
 	
-	// suma los litros
+	// suma los litros de todos los consumos (los choripanes aportan 0)
 	public double sumarLitros() {
 		double total = 0;
 		for (int i = 0; i < cantidadConsumos; i++) {
 			total = total + consumos[i].getLitros();
 		}
 		return total;
+	}
+	
+	// reescribe el txt completo con los consumos actuales, en el mismo formato original
+	// devuelve false si no se pudo escribir
+	public boolean guardarConsumos(String nombreArchivo) {
+		try {
+			BufferedWriter escritor = new BufferedWriter(new FileWriter(nombreArchivo));
+			
+			for (int i = 0; i < cantidadConsumos; i++) {
+				escritor.write(consumos[i].toLineaArchivo() + "\n");
+			}
+			
+			escritor.close();
+			return true;
+		} catch (IOException e) {
+			return false;
+		}
+	}
+	
+	// pasa del numero que ve el usuario (1, 2, 3... dentro de su tipo) a la posicion real del vector
+	// ej: el terremoto numero 3 puede estar en la posicion 17 del vector
+	// devuelve -1 si no existe ese numero para ese tipo
+	public int buscarIndice(String tipo, int numero) {
+		int contador = 0;
+		for (int i = 0; i < cantidadConsumos; i++) {
+			if (consumos[i].getTipo().equals(tipo)) {
+				contador++;
+				if (contador == numero) {
+					return i;
+				}
+			}
+		}
+		return -1;
+	}
+	
+	// agrega el consumo al final del vector
+	// devuelve false si ya se llego al tope de MAX_REGISTROS (no se agrega nada)
+	public boolean agregarConsumo(Consumo nuevo) {
+		if (nuevo == null || cantidadConsumos >= MAX_REGISTROS) {
+			return false;
+		}
+		consumos[cantidadConsumos] = nuevo;
+		cantidadConsumos++;
+		return true;
+	}
+	
+	// cambia el consumo de la posicion indice (posicion real, sacada con buscarIndice) por el nuevo
+	// se arma un Choripan/Terremoto nuevo con los datos editados, asi no hace falta castear
+	// devuelve false si el indice no existe
+	public boolean reemplazarConsumo(int indice, Consumo nuevo) {
+		if (nuevo == null || indice < 0 || indice >= cantidadConsumos) {
+			return false;
+		}
+		consumos[indice] = nuevo;
+		return true;
+	}
+	
+	// borra el consumo de la posicion indice corriendo los de la derecha una posicion
+	// devuelve false si el indice no existe
+	public boolean eliminarConsumo(int indice) {
+		if (indice < 0 || indice >= cantidadConsumos) {
+			return false;
+		}
+		for (int i = indice; i < cantidadConsumos - 1; i++) {
+			consumos[i] = consumos[i + 1];
+		}
+		cantidadConsumos--;
+		consumos[cantidadConsumos] = null;
+		return true;
+	}
+	
+	// cuantos consumos de un tipo tiene un usuario
+	public int contarPorUsuario(String consumidor, String tipo) {
+		int cantidad = 0;
+		for (int i = 0; i < cantidadConsumos; i++) {
+			if (consumos[i].getConsumidor().equals(consumidor) && consumos[i].getTipo().equals(tipo)) {
+				cantidad++;
+			}
+		}
+		return cantidad;
+	}
+	
+	// litros totales de un usuario (los choripanes aportan 0)
+	public double sumarLitrosPorUsuario(String consumidor) {
+		double total = 0;
+		for (int i = 0; i < cantidadConsumos; i++) {
+			if (consumos[i].getConsumidor().equals(consumidor)) {
+				total = total + consumos[i].getLitros();
+			}
+		}
+		return total;
+	}
+	
+	// kcal de un usuario para un tipo, cada consumo calcula las suyas (polimorfismo)
+	public double sumarKcalPorUsuario(String consumidor, String tipo) {
+		double total = 0;
+		for (int i = 0; i < cantidadConsumos; i++) {
+			if (consumos[i].getConsumidor().equals(consumidor) && consumos[i].getTipo().equals(tipo)) {
+				total = total + consumos[i].calcularKcal();
+			}
+		}
+		return total;
+	}
+	
+	// kcal de toda la fonda, sumando el total de cada usuario ya redondeado a 2 decimales
+	// asi el total coincide con la suma de lo que se ve en la tabla (como en el enunciado)
+	public double sumarKcalFonda() {
+		double total = 0;
+		for (int i = 0; i < cantidadParticipantes; i++) {
+			String nombre = participantes[i].getNombre();
+			double kcal = sumarKcalPorUsuario(nombre, "Choripan") + sumarKcalPorUsuario(nombre, "Terremoto");
+			int centesimas = (int) (kcal * 100 + 0.5);
+			total = total + centesimas / 100.0;
+		}
+		return total;
+	}
+	
+	// litros de terremoto que tomo un usuario en una fecha (suma todos los de ese dia)
+	public double litrosEnFecha(String consumidor, String fecha) {
+		double total = 0;
+		for (int i = 0; i < cantidadConsumos; i++) {
+			if (consumos[i].getConsumidor().equals(consumidor) && consumos[i].getFecha().equals(fecha)) {
+				total = total + consumos[i].getLitros();
+			}
+		}
+		return total;
+	}
+	
+	// true si en la posicion indicada esta el primer terremoto de ese usuario en esa fecha
+	// sirve para revisar cada fecha una sola vez aunque tenga varios terremotos
+	private boolean esPrimerTerremotoDelDia(int posicion) {
+		Consumo actual = consumos[posicion];
+		for (int i = 0; i < posicion; i++) {
+			if (consumos[i].getTipo().equals("Terremoto")
+					&& consumos[i].getConsumidor().equals(actual.getConsumidor())
+					&& consumos[i].getFecha().equals(actual.getFecha())) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	// true si la posicion indicada abre un dia ebrio: primer terremoto del dia y 2 L o mas ese dia
+	private boolean esDiaEbrio(int posicion, String consumidor) {
+		Consumo actual = consumos[posicion];
+		return actual.getTipo().equals("Terremoto")
+				&& actual.getConsumidor().equals(consumidor)
+				&& esPrimerTerremotoDelDia(posicion)
+				&& litrosEnFecha(consumidor, actual.getFecha()) >= 2;
+	}
+	
+	// cantidad de dias en que el usuario tomo 2 litros o mas de terremoto
+	public int contarDiasEbrio(String consumidor) {
+		int dias = 0;
+		for (int i = 0; i < cantidadConsumos; i++) {
+			if (esDiaEbrio(i, consumidor)) {
+				dias++;
+			}
+		}
+		return dias;
+	}
+	
+	// fechas de los dias ebrio con sus litros, ej: "2026-09-18 (2.25 L)", o "-" si no tiene
+	public String detalleDiasEbrio(String consumidor) {
+		String detalle = "";
+		for (int i = 0; i < cantidadConsumos; i++) {
+			if (esDiaEbrio(i, consumidor)) {
+				String fecha = consumos[i].getFecha();
+				if (detalle.length() != 0) {
+					detalle = detalle + ", ";
+				}
+				detalle = detalle + fecha + " (" + Formato.decimal(litrosEnFecha(consumidor, fecha)) + " L)";
+			}
+		}
+		if (detalle.length() == 0) {
+			return "-";
+		}
+		return detalle;
 	}
 
 }

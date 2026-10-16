@@ -15,6 +15,7 @@ public class Choripan extends Consumo {
 		this.ancho = ancho;
 	}
 
+	@Override
 	public int getLargo() {
 		return largo;
 	}
@@ -23,6 +24,7 @@ public class Choripan extends Consumo {
 		this.largo = largo;
 	}
 
+	@Override
 	public int getAncho() {
 		return ancho;
 	}
@@ -42,6 +44,7 @@ public class Choripan extends Consumo {
 		return "Choripan";
 	}
 	
+	// consumidor, largo, ancho, fecha y kcal alineados en columnas
 	@Override
 	public String getFila() {
 		return Formato.izquierda(getConsumidor(), 12)
@@ -49,6 +52,17 @@ public class Choripan extends Consumo {
 				+ Formato.derecha(ancho + " cm", 8)
 				+ "   " + getFecha()
 				+ Formato.derecha(Formato.decimal(calcularKcal()), 9);
+	}
+	
+	@Override
+	public String getDetalle() {
+		return "Choripan | " + getConsumidor() + " | " + largo + " cm x " + ancho + " cm | " + getFecha();
+	}
+	
+	// mismo formato del txt: Choripan;Consumidor;Largo;Ancho;Fecha
+	@Override
+	public String toLineaArchivo() {
+		return "Choripan;" + getConsumidor() + ";" + largo + ";" + ancho + ";" + getFecha();
 	}
 
 }
